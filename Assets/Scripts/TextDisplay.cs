@@ -45,7 +45,14 @@ public class TextDisplay : MonoBehaviour {
   
   public void UpdateSuggestedButtons() {
     string ageText = this.GetAgeText();
-    Language.WordType[] types = Language.PossibleNextWordTypes(ageText);
+
+    int words = this.inputField.text.Split(' ').Length;
+
+    Language.WordType[] types = new Language.WordType[0];
+    if (words < 30) {
+      types = Language.PossibleNextWordTypes(ageText);
+    }
+
     GameObject.FindObjectOfType<TextButtonManager>().ShowSuggestedButtons(types);
   }
 

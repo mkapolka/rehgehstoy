@@ -509,12 +509,11 @@ public class Language : MonoBehaviour {
     }
 
     Phrase[] phrases = GetPhrases(words);
-    if (words[words.Length - 1] is Adjective) {
-      Debug.Log(words[words.Length - 1]);
+    if (words.Length > 0 && words[words.Length - 1] is Adjective) {
       wordTypes.Add(WordType.Adverb);
     }
 
-    if (phrases[phrases.Length - 1].location == null) {
+    if (phrases.Length > 0 && phrases[phrases.Length - 1].location == null) {
       wordTypes.Add(WordType.Location);
     }
 
