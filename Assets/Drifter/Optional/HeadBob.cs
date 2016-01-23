@@ -7,7 +7,7 @@ using System.Collections;
 
 public class HeadBob : MonoBehaviour
 {	
-	private float bobbingSpeed = 0.25f; 
+	private float bobbingSpeed = 12.00f; 
 	public float bobbingAmount = 0.05f; 
 	public float  midpoint = 0.6f; 
 	
@@ -26,7 +26,7 @@ public class HeadBob : MonoBehaviour
 	    else
 	    { 
 	       waveslice = Mathf.Sin(timer); 
-	       timer = timer + bobbingSpeed; 
+	       timer = timer + bobbingSpeed * Time.deltaTime; 
 	       if (timer > Mathf.PI * 2f)
 	       { 
 	          timer = timer - (Mathf.PI * 2f); 
