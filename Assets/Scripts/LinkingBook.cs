@@ -3,6 +3,9 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Net;
+using System.IO;
+using System;
 
 
 public class LinkingBook : MonoBehaviour {
@@ -19,8 +22,15 @@ public class LinkingBook : MonoBehaviour {
   public AudioSource bookSfx;
   public AudioSource ageSfx;
 
+	//Wanton disregard for security
+	public bool AcceptAllCertifications(object sender, System.Security.Cryptography.X509Certificates.X509Certificate certification, System.Security.Cryptography.X509Certificates.X509Chain chain, System.Net.Security.SslPolicyErrors sslPolicyErrors)
+	{
+	    return true;
+	}
+
   public void Start() {
     this.SetPlayerLocked(true);
+    ServicePointManager.ServerCertificateValidationCallback = new System.Net.Security.RemoteCertificateValidationCallback(AcceptAllCertifications);
   }
 
   public void UploadBook() {
@@ -32,14 +42,31 @@ public class LinkingBook : MonoBehaviour {
     
     if (this.bookId != "Personal Book" && bookText.Trim() != "" && shouldUpload) {
       Debug.Log("Uploading " + this.bookId + "...");
-      using(var client = new System.Net.WebClient()) {
-        string result = Regex.Replace(bookText, @"[^\x00-\x7F]", c => 
-            string.Format(@"\u{0:x4}", (int)c.Value[0]));
-        byte[] payload = new ASCIIEncoding().GetBytes("\"" + result + "\"");
-        client.UploadDataAsync(new System.Uri("http://rehgehstoy.firebaseio.com/books/" + this.bookId + ".json"), "PUT", payload);
-      }
+
+			var http = System.Net.WebRequest.Create(new System.Uri("https://rehgehstoy.firebaseio.com/books/" + this.bookId + ".json"));
+			http.Method = "PUT";
+
+			var stream = http.BeginGetRequestStream(new AsyncCallback(GetRequestStreamCallback), http);
     }
   }
+
+	private void GetRequestStreamCallback(IAsyncResult asynchronousResult)
+	{
+		HttpWebRequest http = (HttpWebRequest)asynchronousResult.AsyncState;
+		Stream stream = http.EndGetRequestStream(asynchronousResult);
+		string result = Regex.Replace(this.textSource.inputField.text, @"[^\x00-\x7F]", c => 
+    string.Format(@"\u{0:x4}", (int)c.Value[0]));
+		result = Regex.Replace(result, @"\n", c => "%0D%0A");
+		byte[] payload = new ASCIIEncoding().GetBytes("\"" + result + "\"");
+
+		stream.Write(payload, 0, payload.Length);
+		stream.Flush();
+		stream.Close();
+		HttpWebResponse responseStream = (HttpWebResponse)http.GetResponse();
+		Debug.Log(responseStream.ToString());
+		responseStream.Close();
+		Debug.Log("Uploaded " + this.bookId);
+	}
 
   public void TouchLinkPanel() {
     this.LockCursor(true);
